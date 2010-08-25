@@ -1,4 +1,4 @@
-prerequisitites:
+Prerequisitites:
 ---------------
 
 On fedora, along with groupinstall of packages
@@ -16,14 +16,14 @@ The following packages are needed to get Vala and this package working:
  gnome-common-2.28.0-1.fc12
  ffmpeg-0.6-2.fc12 ffmpeg-devel-0.6-2.fc12 ffmpeg-libs-0.6-2.fc12
 
-building:
+Building:
 --------
 
  ./configure
  make
  sudo make install (installs /usr/local/bin/spekle, etc).
 
-running:
+Running:
 -------
 
  $$ spekle http://ra4.residentadvisor.net/audio/RA221_100823_Shed-residentadvisor.net.mp3
@@ -36,14 +36,14 @@ running:
  SpekApp: drawing 3476.19 s.'MP3 (MPEG audio layer 3), 160 kbps, 44100 Hz, 2 channels'. DONE!
  SpekApp: saving 'RA221_100823_Shed-residentadvisor.net.mp3.png'... DONE!
 
-development and packaging:
+Development and Packaging:
 -------------------------
 
-to clean up source dir properly:
+To clean up source dir properly:
  make clean                      ## cleans *.o and binary
  make maintainer-clean-generic   ## cleans vala generated .c/.h, leaving orig sourcedir .c/.h
 
-after changing automake/configure/etc
+After changing automake/configure/etc.:
  autoreconf -i -f
  ./configure
 
