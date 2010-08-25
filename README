@@ -16,9 +16,18 @@ The following packages are needed to get Vala and this package working:
  gnome-common-2.28.0-1.fc12
  ffmpeg-0.6-2.fc12 ffmpeg-devel-0.6-2.fc12 ffmpeg-libs-0.6-2.fc12
 
+Retrieving Latest Source
+------------------------
+
+ $$ svn checkout http://spekle.googlecode.com/svn/trunk/ spekle-svn
+ ## then see spekle-svn/README, the file you're reading.
+ ## spekle-svn/spekle/src/ contains the source files.
+ ## do configure,build,make from spekle-svn/spekle/ 
+
 Building:
 --------
 
+ cd spekle-svn/spekle      ## speckle-svn results of checkout above
  ./configure
  make
  sudo make install (installs /usr/local/bin/spekle, etc).
