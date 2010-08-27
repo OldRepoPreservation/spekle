@@ -25,7 +25,7 @@ Retrieving Latest Source
 ------------------------
 ------------------------
 
- $$ svn checkout http://spekle.googlecode.com/svn/trunk/ spekle-svn
+ $ svn checkout http://spekle.googlecode.com/svn/trunk/ spekle-svn
  ## then see spekle-svn/README, the file you're reading.
  ## spekle-svn/spekle/src/ contains the source files.
  ## do configure,build,make from spekle-svn/spekle/ 
@@ -35,17 +35,17 @@ Building:
 --------
 --------
 
- cd spekle-svn/spekle      ## speckle-svn results of checkout above
- ./configure
- make
- sudo make install (installs /usr/local/bin/spekle, etc).
+ $ cd spekle-svn/spekle      ## speckle-svn results of checkout above
+ $ ./configure
+ $ make
+ $ sudo make install (installs /usr/local/bin/spekle, etc).
 
 
 Running:
 -------
 -------
 
- $$ spekle http://ra4.residentadvisor.net/audio/RA221_100823_Shed-residentadvisor.net.mp3
+ $ spekle http://ra4.residentadvisor.net/audio/RA221_100823_Shed-residentadvisor.net.mp3
  http://ra4.residentadvisor.net/audio/RA221_100823_Shed-residentadvisor.net.mp3
  SpekApp: calling open_file(http://ra4.residentadvisor.net/audio/RA221_100823_Shed-residentadvisor.net.mp3)
  SpekApp: start()ing...
@@ -61,16 +61,16 @@ Development and Packaging:
 -------------------------
 
 To clean up source dir properly:
- make clean
+ $ make clean
  ## cleans *.o and binary
- make maintainer-clean-generic
+ $ make maintainer-clean-generic
  ## cleans vala generated .c/.h, leaving orig sourcedir .c/.h
- make tags
+ $ make tags
  ## uses etags(1) to create TAGS (for emacs(1) M-x visit-tags-table)
 
 After changing automake/configure/etc.:
- autoreconf -i -f
- ./configure
+ $ autoreconf -i -f
+ $ ./configure
 
 
 Vala Resources:
