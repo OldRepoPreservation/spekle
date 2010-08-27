@@ -1,12 +1,16 @@
+
 Prerequisitites:
 ---------------
+---------------
 
-On fedora, along with groupinstall of packages
+On fedora, along with groupinstall of the following group packages:
  "GNOME Software Development"
  "Development Tools" (or at least autoconf, automake, gcc, make).
  "Development Libraries".
 
-The following packages are needed to get Vala and this package working:
+The following  packages and their dependencies  are needed to  get Vala and
+spekle working, although a few extra Vala-related packages have been added,
+even though not used currently:
 
  vala-0.9.3-1.fc12 vala-devel-0.9.3-1.fc12 vala-tools-0.9.3-1.fc12
  gobject-introspection-devel-0.6.5-1.fc12
@@ -16,7 +20,9 @@ The following packages are needed to get Vala and this package working:
  gnome-common-2.28.0-1.fc12
  ffmpeg-0.6-2.fc12 ffmpeg-devel-0.6-2.fc12 ffmpeg-libs-0.6-2.fc12
 
+
 Retrieving Latest Source
+------------------------
 ------------------------
 
  $$ svn checkout http://spekle.googlecode.com/svn/trunk/ spekle-svn
@@ -24,7 +30,9 @@ Retrieving Latest Source
  ## spekle-svn/spekle/src/ contains the source files.
  ## do configure,build,make from spekle-svn/spekle/ 
 
+
 Building:
+--------
 --------
 
  cd spekle-svn/spekle      ## speckle-svn results of checkout above
@@ -32,7 +40,9 @@ Building:
  make
  sudo make install (installs /usr/local/bin/spekle, etc).
 
+
 Running:
+-------
 -------
 
  $$ spekle http://ra4.residentadvisor.net/audio/RA221_100823_Shed-residentadvisor.net.mp3
@@ -45,23 +55,34 @@ Running:
  SpekApp: drawing 3476.19 s.'MP3 (MPEG audio layer 3), 160 kbps, 44100 Hz, 2 channels'. DONE!
  SpekApp: saving 'RA221_100823_Shed-residentadvisor.net.mp3.png'... DONE!
 
+
 Development and Packaging:
+-------------------------
 -------------------------
 
 To clean up source dir properly:
- make clean                      ## cleans *.o and binary
- make maintainer-clean-generic   ## cleans vala generated .c/.h, leaving orig sourcedir .c/.h
+ make clean
+ ## cleans *.o and binary
+ make maintainer-clean-generic
+ ## cleans vala generated .c/.h, leaving orig sourcedir .c/.h
+ make tags
+ ## uses etags(1) to create TAGS (for emacs(1) M-x visit-tags-table)
 
 After changing automake/configure/etc.:
  autoreconf -i -f
  ./configure
 
-Vala (this is my first vala programming, maybe yours too??)
+
+Vala Resources:
+----
 ----
 
  Hackers' Guide to Vala
  http://rodney.id.au/dev/vala/hackers.html
 
+ Vala for Java Programmers
+ http://live.gnome.org/Vala/ValaForJavaProgrammers
+ 
  Vala Tutorial
  http://live.gnome.org/Vala/Tutorial
  
