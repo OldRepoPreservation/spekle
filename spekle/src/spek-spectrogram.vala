@@ -20,26 +20,25 @@
 using Cairo;
 using Gdk;
 using Pango;
+using Posix;
 
 namespace Spek {
 	class Spectrogram : GLib.Object {
 
 		// Added by NPM in converting to Gtk-less, Cairo-only...
-		private int my_width = 960; // NPM
+		private int my_width = -1; // NPM: should be set by still_processing_p() before draw() or a warning given
 		private int my_height = 300; // NPM
 		private int seg_count = -1;	 // NPM
 		private int last_count = -1;	 // NPM
-		private ImageSurface my_image;	 // NPM
-		private bool got_media_info = false; // NPM
+		private ImageSurface my_image = null; // NPM
 
 		public string file_name { get; private set; }
 		private Pipeline pipeline;
-		private string info;
 		private const int THRESHOLD = -92;
 		private const int NFFT = 2048;
 		private const int BANDS = NFFT / 2 + 1;
 
-		private ImageSurface image;
+		private ImageSurface image = null;
 		private ImageSurface palette;
 
 		private const int LPAD = 60;
@@ -68,44 +67,23 @@ namespace Spek {
 
 		public void open (string file_name) {
 			this.file_name = file_name;
-			this.info = "";
 
-            //print (_("SpekApp: calling start() in Spectrogram.open()\n"));
+            //print (_("Spekle: calling start() in Spectrogram.open()\n"));
 			start ();
 		}
 
 		/*
-		 * NPM: "Iterator" to determine if FFTP processing of segments has
-		 * completed Note that first run, which should occur after the
+		 * NPM: "Iterator" to determine if FFT processing of segments has
+		 * completed. Note that first run, which should occur after the
 		 * media is retrieved (TODO, add lock for this, as right now it
 		 * just assumes enough of the media could be retrieved to determine
 		 * the size.) ,,,
 		*/
 		public bool still_processing_p() {
-			if (!this.got_media_info) {
-				if (pipeline.duration > 10000) {
-					this.my_width = (int) (pipeline.duration / 10);
-				}
-				else if (pipeline.duration > 1000) {
-					this.my_width = (int) pipeline.duration;
-				}
-				else if (pipeline.duration > 100) {
-					this.my_width = (int) pipeline.duration * 10;
-				}
-				else if (pipeline.duration > 10) {
-					this.my_width = (int) pipeline.duration * 50;
-				}
-				else if (pipeline.duration > 0) {
-					this.my_width = (int) pipeline.duration * 100;
-				}
-				else {
-					this.my_width = -1; // error
-				}
-				if (this.my_width > 0) {
-					this.got_media_info = true;
-					this.my_image = new ImageSurface(Format.RGB24, this.my_width, this.my_height);
-				}
-			}
+//			print (_("Spekle: still_processing_p() my_width=%i duration=%.2f s. description='%s'\n"),
+//				   this.my_width,
+//				   pipeline.duration,
+//				   pipeline.description);
 			if (this.last_count == this.seg_count) { // if stasis, then done...
 				this.last_count = this.seg_count;
 				return (false);
@@ -117,21 +95,30 @@ namespace Spek {
 		}
 
 		// NPM: this only gets called when all processing finished, After start() called, 'image' is created,
-		// and all date has been processed into 'image'.
+		// and all data has been processed into 'image'.
 		public void save() {
 //			var s = new ImageSurface(Format.RGB24, my_width, my_height); //-->created on first call to still_processing_p() to base size on media
 			var iname = GLib.Path.get_basename (this.file_name);
 			iname += ".png";
 
-			print (_("SpekApp: drawing %.2f s.'%s'"),
-				   pipeline.duration,
-				   pipeline.description);
+			if (this.my_image != null) {
+				print (_("Spekle: save() my_width=%i duration=%.2f s. description='%s'.."),
+					   this.my_width,
+					   pipeline.duration,
+					   pipeline.description);
+				draw (new Cairo.Context(this.my_image)); // NPM: this.my_image created on first run of still_processing_p()
+				print (_(". DONE!\nSpekle: saving '%s'.."), iname);
+				this.my_image.write_to_png(iname);
+				print (_(". DONE!\n"));
 
-//			draw (new Cairo.Context(s)); 
-			draw (new Cairo.Context(this.my_image)); // NPM: this.my_image created on first run of still_processing_p()
-			print (_(". DONE!\nSpekApp: saving '%s'.."), iname);
-			this.my_image.write_to_png(iname);
-			print (_(". DONE!\n"));
+			}
+			else {
+				print (_("Spekle: WARNING save() called before my_image created: my_width=%i duration=%.2f s. description='%s'\n"),
+					   this.my_width,
+					   pipeline.duration,
+					   pipeline.description);
+				print (_(". INTERNAL ERROR! NOTHING DONE\n"));
+			}
 		}
 
 //		public void save (string image_fname) {
@@ -144,21 +131,28 @@ namespace Spek {
 			if (pipeline != null) {
 				pipeline.stop ();
 			}
-			print (_("SpekApp: start()ing...\n"));
+			print (_("Spekle: start()ing...\n"));
 
 			// The number of samples is the number of pixels available for the image.
 			// The number of bands is fixed, FFT results are very different for
 			// different values but we need some consistency.
-			int samples = my_width - LPAD - RPAD;
-			if (samples > 0) {
-				image = new ImageSurface (Format.RGB24, samples, BANDS);
-				pipeline = new Pipeline (file_name, BANDS, samples, THRESHOLD, data_cb);
-				pipeline.start ();
-				info = pipeline.description;
-			} else {
-				image = null;
-				pipeline = null;
-			}
+//			int samples = my_width - LPAD - RPAD;
+//			if (samples > 0) {
+
+				// NPM: nb: compared to "spek 0.6" I removed "samples", the
+				// third parameter, the number of samples for the given
+				// image surface of the spectrogram. In 'spekle' the number
+				// of samples is based on media length, so delay the
+				// computation of exact spectrogram width until media
+				// information is known.  The creation of these data is now
+				// in still_processing_p() in this file.
+//				image = new ImageSurface (Format.RGB24, samples, BANDS);
+			pipeline = new Pipeline (file_name, BANDS, 0, THRESHOLD, data_cb, media_retrieved_cb);
+			pipeline.start ();
+//			} else {
+//				image = null;
+//				pipeline = null;
+//			}
 		}
 
 //		private int prev_width = -1;
@@ -173,7 +167,41 @@ namespace Spek {
 //			}
 //		}
 
+		// callback out of spek-pipeline sizing the image based on media length.
+		private void media_retrieved_cb (int num_samples, double duration) { // NPM
+			if (num_samples > 0)
+				print (_("Spekle: media_retrieved_cb(num_samples=%i, duration=%.2f)\n"),
+					   num_samples,
+					   duration);
+			else {
+				print (_("Spekle: Internal error in media retrieval or processing, exiting...\n"));
+				Posix.abort();
+			}
+			
+			this.my_width = num_samples;
+			this.my_image = new ImageSurface(Format.RGB24,
+											 this.my_width,
+											 this.my_height);
+			// NPM: creation of 'image' was originally in start()
+			// in original spek 0.6
+			this.image  = new ImageSurface(Format.RGB24,
+										   this.my_width - LPAD - RPAD,
+										   BANDS);
+		}
+
 		private void data_cb (int sample, float[] values) {
+			if (image == null) {
+				print (_("Spekle: Internal error, data_cb() called before image created; exiting...\n"));
+				Posix.abort();
+			}
+//			else {
+//			print (_("Spekle: data_cb(sample=%i) my_width=%i duration=%.2f s. description='%s'\n"),
+//				   sample,
+//				   this.my_width,
+//				   pipeline.duration,
+//				   pipeline.description);
+//			}
+
 			for (int y = 0; y < BANDS; y++) {
 				var level = double.min (
 					1.0, Math.log10 (1.0 - THRESHOLD + values[y]) / Math.log10 (-THRESHOLD));
@@ -194,6 +222,10 @@ namespace Spek {
 //		}
 
 		private void draw (Cairo.Context cr) {
+			if (this.my_width < 0) {
+				print (_("Spekle: Internal error draw() called before image width set; exiting...\n"));
+				Posix.abort();
+			}
 			double w = my_width;
 			double h = my_height;
 
@@ -250,7 +282,7 @@ namespace Spek {
 					"Sans " + (9 * FONT_SCALE).to_string ()));
 				layout.set_width ((int) (w - LPAD - RPAD) * Pango.SCALE);
 				layout.set_ellipsize (EllipsizeMode.END);
-				layout.set_text (info, -1);
+				layout.set_text (pipeline.description, -1);
 				cairo_show_layout_line (cr, layout.get_line (0));
 				int text_width, text_height;
 				layout.get_pixel_size (out text_width, out text_height);

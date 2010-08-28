@@ -30,23 +30,23 @@ namespace Spek {
 			cur_dir = Environment.get_home_dir ();
 
 			if (file_name != null) {
-				print (_("SpekApp: calling open_file(%s)\n"), file_name);
+				print (_("Spekle: calling open_file(%s)\n"), file_name);
 				open_file (file_name);
 // Note that if save_spectrogram() called synchronously, you get this behavior and a spectrogram file that 
 // includes the markings and other info, but does not have the spectrogram drawn:
-// SpekApp: calling draw() in Spectrogram.start()...
-// SpekApp: Spectrogram.data_cb(0)
-// SpekApp: calling save_spectrogram(/home/npm/.kde/share/apps/amarok/podcasts/That's What People Play/33.m4a)
-// SpekApp: Spectrogram.data_cb(1)
-// SpekApp: Spectrogram.data_cb(2)
-// SpekApp: Spectrogram.data_cb(3)
-// SpekApp: Spectrogram.data_cb(4)
-// SpekApp: Spectrogram.data_cb(5)
-// SpekApp: Spectrogram.data_cb(6)
-//				print (_("SpekApp: calling save_spectrogram(%s)\n"), file_name);
+// Spekle: calling draw() in Spectrogram.start()...
+// Spekle: Spectrogram.data_cb(0)
+// Spekle: calling save_spectrogram(/home/npm/.kde/share/apps/amarok/podcasts/That's What People Play/33.m4a)
+// Spekle: Spectrogram.data_cb(1)
+// Spekle: Spectrogram.data_cb(2)
+// Spekle: Spectrogram.data_cb(3)
+// Spekle: Spectrogram.data_cb(4)
+// Spekle: Spectrogram.data_cb(5)
+// Spekle: Spectrogram.data_cb(6)
+//				print (_("Spekle: calling save_spectrogram(%s)\n"), file_name);
 //				save_spectrogram(file_name);
 
-//				print (_("SpekApp: segments %i\n"), spectrogram.seg_count);
+//				print (_("Spekle: segments %i\n"), spectrogram.seg_count);
 			}
 		}
 

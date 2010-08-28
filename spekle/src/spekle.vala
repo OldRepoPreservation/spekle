@@ -73,7 +73,7 @@ namespace Spek {
 		print (file_name);
 		print ("\n");
 		var app = new SpekApp (file_name);
-		print (_("SpekApp: processing %s .."), file_name);
+		print (_("Spekle: processing %s .."), file_name);
 		app.wait_till_all_segments_processed_and_save();   
 
 //		Gtk.main ();

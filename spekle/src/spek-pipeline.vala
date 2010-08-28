@@ -29,10 +29,11 @@ namespace Spek {
 		public int sample_rate { get; private set; }
 		public double duration { get { return cx.duration; } }
 		public delegate void Callback (int sample, float[] values);
+		public delegate void MediaCallback (int num_samples, double duration); // NPM for got_media_cb()
 
 		private Audio.Context cx;
 		private int bands;
-		private int samples;
+		private int samples = -1; //NPM: set to -1 to catch cases of use before delayedStart()
 		private int threshold;
 		private Callback cb;
 
@@ -51,15 +52,35 @@ namespace Spek {
 		private Mutex worker_mutex;
 		private Cond worker_cond;
 		private bool worker_done = false;
+		private bool cx_started_p = false; // NPM ensure cx.start() called only once in worker_func()
 		private bool quit = false;
 
-		public Pipeline (string file_name, int bands, int samples, int threshold, Callback cb) {
+		public Pipeline (string file_name, int bands, int samples /* NPM: notused */ , int threshold, Callback cb, MediaCallback got_media_cb) {
 			this.cx = new Audio.Context (file_name);
 			this.bands = bands;
-			this.samples = samples;
+//			this.samples = samples;
+			if (this.cx.duration > 10000)
+				this.samples = (int) (this.cx.duration / 10);
+			else if (this.cx.duration > 1000)
+				this.samples = (int) this.cx.duration;
+			else if (this.cx.duration > 100)
+				this.samples = (int) this.cx.duration * 10;
+			else if (this.cx.duration > 10)
+				this.samples = (int) this.cx.duration * 50;
+			else if (this.cx.duration > 0)
+				this.samples = (int) this.cx.duration * 100;
+			else
+				this.samples = -1; // error -- let got_media_cb() handle it...
+
+			got_media_cb(this.samples, this.cx.duration); // tell spectrogram that called us we got media, and how big it is.
+
 			this.threshold = threshold;
 			this.cb = cb;
 
+//			print (_("Spekle: in Pipeline(%s), duration=%f\n"),
+//				   file_name,
+//				   this.cx.duration);
+			
 			// Build the description string.
 			string[] items = {};
 			if (cx.codec_name != null) {
@@ -92,7 +113,7 @@ namespace Spek {
 				this.input_size = nfft * (NFFT * 2 + 1);
 				this.input = new float[input_size];
 				this.output = new float[bands];
-				this.cx.start (samples);
+//				this.cx.start (samples);
 			}
 		}
 
@@ -182,6 +203,10 @@ namespace Spek {
 		}
 
 		private void * worker_func () {
+			if (!cx_started_p) {
+				this.cx.start (this.samples);
+				cx_started_p = true;
+			}
 			int sample = 0;
 			int64 frames = 0;
 			int64 num_fft = 0;

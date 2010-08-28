@@ -29,7 +29,7 @@ PKG_CHECK_MODULES(SPEKLE, [$pkg_modules])
 AC_SUBST(SPEKLE_CFLAGS)
 AC_SUBST(SPEKLE_LIBS)
 
-SPEKLE_PACKAGES="--pkg gtk+-2.0 --pkg gio-2.0"
+SPEKLE_PACKAGES="--pkg gtk+-2.0 --pkg gio-2.0 --pkg=posix"
 AC_SUBST(SPEKLE_PACKAGES)
 
 AC_CHECK_LIB(m, log10f)
