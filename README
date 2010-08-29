@@ -38,7 +38,7 @@ Building:
  $ cd spekle-svn/spekle      ## speckle-svn results of checkout above
  $ ./configure
  $ make
- $ sudo make install (installs /usr/local/bin/spekle, etc).
+ $ sudo make install         ## (installs /usr/local/bin/spekle, etc).
 
 
 Running:
