@@ -24,7 +24,7 @@ AM_PROG_VALAC([0.7.0])
 AC_PROG_INSTALL
 AC_PROG_INTLTOOL([0.35])
 
-pkg_modules="gtk+-2.0 >= 2.18.0 libavformat libavcodec >= 52.23.0 libavutil gthread-2.0"
+pkg_modules="gtk+-2.0 >= 2.18.0 libavformat libavcodec >= 52.56.0 libavutil gthread-2.0"
 PKG_CHECK_MODULES(SPEKLE, [$pkg_modules])
 AC_SUBST(SPEKLE_CFLAGS)
 AC_SUBST(SPEKLE_LIBS)
