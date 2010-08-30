@@ -175,7 +175,7 @@ namespace Spek {
 					   duration);
 			else {
 				print (_("Spekle: Internal error in media retrieval or processing, exiting...\n"));
-				Posix.abort();
+				Posix.exit(254);
 			}
 			
 			this.my_width = num_samples;
@@ -189,10 +189,11 @@ namespace Spek {
 										   BANDS);
 		}
 
+		private double log10_threshold = Math.log10 (-THRESHOLD);
 		private void data_cb (int sample, float[] values) {
 			if (image == null) {
 				print (_("Spekle: Internal error, data_cb() called before image created; exiting...\n"));
-				Posix.abort();
+				Posix.exit(254);
 			}
 //			else {
 //			print (_("Spekle: data_cb(sample=%i) my_width=%i duration=%.2f s. description='%s'\n"),
@@ -204,7 +205,7 @@ namespace Spek {
 
 			for (int y = 0; y < BANDS; y++) {
 				var level = double.min (
-					1.0, Math.log10 (1.0 - THRESHOLD + values[y]) / Math.log10 (-THRESHOLD));
+					1.0, Math.log10 (1.0 - THRESHOLD + values[y]) / log10_threshold);
 				put_pixel (image, sample, y, get_color (level));
 			}
 			this.seg_count = sample;
@@ -224,14 +225,33 @@ namespace Spek {
 		private void draw (Cairo.Context cr) {
 			if (this.my_width < 0) {
 				print (_("Spekle: Internal error draw() called before image width set; exiting...\n"));
-				Posix.abort();
+				Posix.exit(254);
 			}
 			double w = my_width;
 			double h = my_height;
+			int text_width, text_height;
 
 			// Clean the background.
 			cr.set_source_rgb (0, 0, 0);
 			cr.paint ();
+
+			// Spek version
+			cr.set_source_rgb (1, 1, 1);
+			var layout = cairo_create_layout (cr);
+			layout.set_font_description (FontDescription.from_string (
+				"Sans " + (9 * FONT_SCALE).to_string ()));
+			layout.set_width (RPAD * Pango.SCALE);
+			layout.set_text ("v" + Config.PACKAGE_VERSION, -1);
+			layout.get_pixel_size (out text_width, out text_height);
+			int line_height = text_height;
+			cr.move_to (w - (RPAD + text_width) / 2, TPAD - GAP);
+			cairo_show_layout_line (cr, layout.get_line (0));
+			layout.set_font_description (FontDescription.from_string (
+				 "Sans Bold " + (10 * FONT_SCALE).to_string ()));
+			layout.set_text (Config.PACKAGE_NAME, -1);
+			layout.get_pixel_size (out text_width, out text_height);
+			cr.move_to (w - (RPAD + text_width) / 2, TPAD - 2 * GAP - line_height);
+			cairo_show_layout_line (cr, layout.get_line (0));
 
 			if (image != null) {
 				// Draw the spectrogram.
@@ -245,7 +265,6 @@ namespace Spek {
 				cr.set_source_rgb (1, 1, 1);
 				cr.set_line_width (1);
 				cr.set_antialias (Antialias.NONE);
-				var layout = cairo_create_layout (cr);
 				layout.set_font_description (FontDescription.from_string (
 					"Sans " + (8 * FONT_SCALE).to_string ()));
 				layout.set_width (-1);
@@ -284,7 +303,6 @@ namespace Spek {
 				layout.set_ellipsize (EllipsizeMode.END);
 				layout.set_text (pipeline.description, -1);
 				cairo_show_layout_line (cr, layout.get_line (0));
-				int text_width, text_height;
 				layout.get_pixel_size (out text_width, out text_height);
 
 				// File name.

@@ -38,6 +38,7 @@ namespace Spek {
 		private Callback cb;
 
 		private Fft.Plan fft;
+		private float[] coss; // Pre-computed cos table.
 		private int nfft; // Size of the FFT transform.
 		private const int NFFT = 64; // Number of FFTs to pre-fetch.
 		private int input_size;
@@ -87,7 +88,7 @@ namespace Spek {
 				items += cx.codec_name;
 			}
 			if (cx.bit_rate != 0) {
-				items += _("%d kbps").printf (cx.bit_rate / 1000);
+				items += _("%d kbps").printf ((cx.bit_rate + 500) / 1000);
 			}
 			if (cx.sample_rate != 0) {
 				items += _("%d Hz").printf (cx.sample_rate);
@@ -109,6 +110,11 @@ namespace Spek {
 			} else {
 				this.sample_rate = cx.sample_rate;
 				this.nfft = 2 * bands - 2;
+				this.coss = new float[nfft];
+				float cf = 2f * (float) Math.PI / this.nfft;
+				for (int i = 0; i < this.nfft; i++) {
+					this.coss[i] = Math.cosf (cf * i);
+				}
 				this.fft = new Fft.Plan (nfft, threshold);
 				this.input_size = nfft * (NFFT * 2 + 1);
 				this.input = new float[input_size];
@@ -151,6 +157,9 @@ namespace Spek {
 		}
 
 		private void * reader_func () {
+			var timeval = TimeVal ();
+			timeval.get_current_time ();
+
 			int pos = 0, prev_pos = 0;
 			int block_size = cx.width * cx.channels / 8;
 			int size;
@@ -187,6 +196,11 @@ namespace Spek {
 			reader_sync (-1);
 			worker_thread.join ();
 
+			var newval = TimeVal ();
+			newval.get_current_time ();
+			long ms = (newval.tv_sec - timeval.tv_sec) * 1000 +
+				(newval.tv_usec - timeval.tv_usec) / 1000;
+			print (".( %i mS ).", (int) ms); // NPM, for spekle, removed newline since this prints inside '....'
 			return null;
 		}
 
@@ -203,7 +217,7 @@ namespace Spek {
 		}
 
 		private void * worker_func () {
-			if (!cx_started_p) {
+			if (!cx_started_p) { // NPM
 				this.cx.start (this.samples);
 				cx_started_p = true;
 			}
@@ -211,7 +225,6 @@ namespace Spek {
 			int64 frames = 0;
 			int64 num_fft = 0;
 			int64 acc_error = 0;
-			float cf = 2f * (float) Math.PI / nfft;
 			int head = 0, tail = 0;
 			int prev_head = 0;
 
@@ -251,7 +264,7 @@ namespace Spek {
 						for (int i = 0; i < nfft; i++) {
 							float val = input[(input_size + head - nfft + i) % input_size];
 							// Hamming window.
-							val *= 0.53836f - 0.46164f * Math.cosf (cf * i);
+							val *= 0.53836f - 0.46164f * coss[i];
 							fft.input[i] = val;
 						}
 						fft.execute ();
